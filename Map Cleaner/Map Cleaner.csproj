@@ -58,6 +58,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="TValue.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -66,14 +67,15 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ClassBeatmap.cs" />
-    <Compile Include="ClassColour.cs" />
-    <Compile Include="ClassEditor.cs" />
-    <Compile Include="ClassHitObject.cs" />
-    <Compile Include="ClassPoint.cs" />
-    <Compile Include="ClassTimeline.cs" />
-    <Compile Include="ClassTiming.cs" />
-    <Compile Include="ClassTimingPoint.cs" />
+    <Compile Include="Beatmap.cs" />
+    <Compile Include="Colour.cs" />
+    <Compile Include="Editor.cs" />
+    <Compile Include="HitObject.cs" />
+    <Compile Include="Point.cs" />
+    <Compile Include="Timeline.cs" />
+    <Compile Include="TimelineObject.cs" />
+    <Compile Include="Timing.cs" />
+    <Compile Include="TimingPoint.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
