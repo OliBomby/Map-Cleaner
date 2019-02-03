@@ -7,46 +7,52 @@ using System.Windows;
 using System.ComponentModel;
 using System.Globalization;
 using System.Collections;
+using System.Windows.Input;
 
 //TODO: 
 //  Doubled greenlines: they will both change different things
 //  Filename obsoletes custom index only
 
-namespace Map_Cleaner
-{
+namespace Map_Cleaner {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
     /// 
 
 
-    public partial class MainWindow : Window
-    {
+    public partial class MainWindow : Window {
         private BackgroundWorker backgroundWorker;
 
-        public MainWindow()
-        {
+        public MainWindow() {
             InitializeComponent();
             backgroundWorker =
             ((BackgroundWorker)this.FindResource("backgroundWorker"));
         }
 
+        private void MinimizeWin(object sender, RoutedEventArgs e) {
+            this.WindowState = WindowState.Minimized;
+        }
 
-        private void BackgroundWorker_DoWork(object sender, DoWorkEventArgs e)
-        {
+        private void CloseWin(object sender, RoutedEventArgs e) {
+            this.Close();
+        }
+
+        private void DragWin(object sender, MouseButtonEventArgs e) {
+            if (e.ChangedButton == MouseButton.Left)
+                this.DragMove();
+        }
+
+        private void BackgroundWorker_DoWork(object sender, DoWorkEventArgs e) {
             var bgw = sender as BackgroundWorker;
             e.Result = Run_Program2((List<string>)e.Argument, bgw, e);
         }
 
 
-        private void BackgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            if (e.Error != null)
-            {
+        private void BackgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e) {
+            if (e.Error != null) {
                 MessageBox.Show(e.Error.Message);
             }
-            else
-            {
+            else {
                 MessageBox.Show(e.Result.ToString());
                 progress.Value = 0;
             }
@@ -54,16 +60,13 @@ namespace Map_Cleaner
         }
 
 
-        private void BackgroundWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
-        {
+        private void BackgroundWorker_ProgressChanged(object sender, ProgressChangedEventArgs e) {
             progress.Value = e.ProgressPercentage;
         }
 
 
-        private void Select_Click(object sender, RoutedEventArgs e)
-        {
-            OpenFileDialog openFileDialog1 = new OpenFileDialog
-            {
+        private void Select_Click(object sender, RoutedEventArgs e) {
+            OpenFileDialog openFileDialog1 = new OpenFileDialog {
                 InitialDirectory = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Local\\osu!\\Songs"),
                 Filter = "Osu files (*.osu)|*.osu",
                 FilterIndex = 1,
@@ -76,8 +79,7 @@ namespace Map_Cleaner
         }
 
 
-        private void Start_Click(object sender, RoutedEventArgs e)
-        {
+        private void Start_Click(object sender, RoutedEventArgs e) {
             backgroundWorker.RunWorkerAsync(new List<string> { selectBox.Text, VolumeSliders.IsChecked.ToString(), SamplesetSliders.IsChecked.ToString(),
                                                     VolumeSpinners.IsChecked.ToString(), RemoveSliderendMuting.IsChecked.ToString(),
                                                     ResnapObjects.IsChecked.ToString(), ResnapBookmarks.IsChecked.ToString(), Snap1.Text, Snap2.Text});
@@ -85,8 +87,7 @@ namespace Map_Cleaner
         }
 
 
-        private string Run_Program2(List<string> arguments, BackgroundWorker worker, DoWorkEventArgs e)
-        {
+        private string Run_Program2(List<string> arguments, BackgroundWorker worker, DoWorkEventArgs e) {
             // Retrieve all arguments
             string path = arguments[0];
             bool volumeSliders = arguments[1] == "True";
@@ -114,22 +115,17 @@ namespace Map_Cleaner
             List<TimingPoint> svChanges = new List<TimingPoint>();
             bool lastKiai = false;
             double lastSV = -100;
-            for (int i = 0; i < timing.TimingPoints.Count; i ++)
-            {
+            for (int i = 0; i < timing.TimingPoints.Count; i++) {
                 TimingPoint tp = timing.TimingPoints[i];
-                if (tp.Kiai != lastKiai)
-                {
+                if (tp.Kiai != lastKiai) {
                     kiaiToggles.Add(tp.Copy());
                     lastKiai = tp.Kiai;
                 }
-                if (tp.Inherited)
-                {
+                if (tp.Inherited) {
                     lastSV = -100;
                 }
-                else
-                {
-                    if (tp.MpB != lastSV)
-                    {
+                else {
+                    if (tp.MpB != lastSV) {
                         svChanges.Add(tp.Copy());
                         lastSV = tp.MpB;
                     }
@@ -138,15 +134,12 @@ namespace Map_Cleaner
             }
 
             // Resnap shit
-            if (resnapObjects)
-            {
+            if (resnapObjects) {
                 // Resnap all objects
-                for (int i = 0; i < editor.Beatmap.HitObjects.Count; i++)
-                {
+                for (int i = 0; i < editor.Beatmap.HitObjects.Count; i++) {
                     HitObject ho = editor.Beatmap.HitObjects[i];
                     bool resnapped = ho.ResnapSelf(timing, snap1, snap2);
-                    if (resnapped)
-                    {
+                    if (resnapped) {
                         objectsResnapped += 1;
                     }
                     ho.ResnapEnd(timing, snap1, snap2);
@@ -154,27 +147,23 @@ namespace Map_Cleaner
                 }
 
                 // Resnap Kiai toggles and SV changes
-                for (int i = 0; i < kiaiToggles.Count; i++)
-                {
+                for (int i = 0; i < kiaiToggles.Count; i++) {
                     TimingPoint tp = kiaiToggles[i];
                     tp.ResnapSelf(timing, snap1, snap2);
                     UpdateProgressbar(worker, (double)i / kiaiToggles.Count, 2, maxStages);
                 }
-                for (int i = 0; i < svChanges.Count; i++)
-                {
+                for (int i = 0; i < svChanges.Count; i++) {
                     TimingPoint tp = svChanges[i];
                     tp.ResnapSelf(timing, snap1, snap2);
                     UpdateProgressbar(worker, (double)i / svChanges.Count, 3, maxStages);
                 }
             }
 
-            if (resnapBookmarks)
-            {
+            if (resnapBookmarks) {
                 // Resnap the bookmarks
                 List<double> newBookmarks = new List<double>();
                 List<double> bookmarks = editor.Beatmap.GetBookmarks();
-                for (int i = 0; i < bookmarks.Count; i++)
-                {
+                for (int i = 0; i < bookmarks.Count; i++) {
                     double bookmark = bookmarks[i];
                     newBookmarks.Add(Math.Floor(timing.Resnap(bookmark, snap1, snap2)));
                     UpdateProgressbar(worker, (double)i / bookmarks.Count, 4, maxStages);
@@ -186,32 +175,27 @@ namespace Map_Cleaner
             List<Change> changes = new List<Change>();
             // Add redlines
             List<TimingPoint> redlines = timing.GetAllRedlines();
-            for (int i = 0; i < redlines.Count; i++)
-            {
+            for (int i = 0; i < redlines.Count; i++) {
                 TimingPoint tp = redlines[i];
                 changes.Add(new Change(tp, mpb: true, meter: true, inherited: true));
                 UpdateProgressbar(worker, (double)i / redlines.Count, 5, maxStages);
             }
             // Add SV changes for taiko and mania
-            if (mode == 1 || mode == 3)
-            {
-                for (int i = 0; i < svChanges.Count; i++)
-                {
+            if (mode == 1 || mode == 3) {
+                for (int i = 0; i < svChanges.Count; i++) {
                     TimingPoint tp = svChanges[i];
                     changes.Add(new Change(tp, mpb: true));
                     UpdateProgressbar(worker, (double)i / svChanges.Count, 6, maxStages);
                 }
             }
             // Add Kiai toggles
-            for (int i = 0; i < kiaiToggles.Count; i++)
-            {
+            for (int i = 0; i < kiaiToggles.Count; i++) {
                 TimingPoint tp = kiaiToggles[i];
                 changes.Add(new Change(tp, kiai: true));
                 UpdateProgressbar(worker, (double)i / kiaiToggles.Count, 7, maxStages);
             }
             // Add Hitobject stuff
-            for (int i = 0; i < editor.Beatmap.HitObjects.Count; i++)
-            {
+            for (int i = 0; i < editor.Beatmap.HitObjects.Count; i++) {
                 HitObject ho = editor.Beatmap.HitObjects[i];
                 if (ho.IsSlider) // SV changes
                 {
@@ -225,8 +209,7 @@ namespace Map_Cleaner
                 bool sam = (ho.IsSlider && samplesetSliders && ho.SampleSet == 0);
                 bool ind = (ho.IsSlider && samplesetSliders);
                 bool samplesetActuallyChanged = false;
-                foreach (TimingPoint tp in ho.BodyHitsounds)
-                {
+                foreach (TimingPoint tp in ho.BodyHitsounds) {
                     if (tp.Volume == 5 && removeSliderendMuting) { vol = false; }  // Removing sliderbody silencing
                     changes.Add(new Change(tp, volume: vol, index: ind, sampleset: sam));
                     if (tp.SampleSet != ho.HitsoundTP.SampleSet) { samplesetActuallyChanged = samplesetSliders && ho.SampleSet == 0; }  // True for sampleset change in sliderbody
@@ -245,22 +228,18 @@ namespace Map_Cleaner
                 UpdateProgressbar(worker, (double)i / editor.Beatmap.HitObjects.Count, 8, maxStages);
             }
             // Add timeline hitsounds
-            for (int i = 0; i < timeline.TimeLineObjects.Count; i++)
-            {
+            for (int i = 0; i < timeline.TimeLineObjects.Count; i++) {
                 TimelineObject tlo = timeline.TimeLineObjects[i];
                 // Change the samplesets in the hitobjects
-                if (tlo.Origin.IsCircle)
-                {
+                if (tlo.Origin.IsCircle) {
                     tlo.Origin.SampleSet = tlo.FenoSampleSet;
                     tlo.Origin.AdditionSet = tlo.FenoAdditionSet;
-                    if (mode == 3)
-                    {
+                    if (mode == 3) {
                         tlo.Origin.CustomIndex = tlo.FenoCustomIndex;
                         tlo.Origin.SampleVolume = tlo.FenoSampleVolume;
                     }
                 }
-                else if (tlo.Origin.IsSlider)
-                {
+                else if (tlo.Origin.IsSlider) {
                     tlo.Origin.EdgeHitsounds[tlo.Repeat] = tlo.GetHitsounds();
                     tlo.Origin.EdgeSampleSets[tlo.Repeat] = tlo.FenoSampleSet;
                     tlo.Origin.EdgeAdditionSets[tlo.Repeat] = tlo.FenoAdditionSet;
@@ -270,19 +249,15 @@ namespace Map_Cleaner
                         tlo.Origin.EdgeAdditionSets[tlo.Repeat] = 0;
                     }
                 }
-                else if (tlo.Origin.IsSpinner)
-                {
-                    if (tlo.Repeat == 1)
-                    {
+                else if (tlo.Origin.IsSpinner) {
+                    if (tlo.Repeat == 1) {
                         tlo.Origin.SampleSet = tlo.FenoSampleSet;
                         tlo.Origin.AdditionSet = tlo.FenoAdditionSet;
-                        
+
                     }
                 }
-                else if (tlo.Origin.IsHoldNote)
-                {
-                    if (tlo.Repeat == 0)
-                    {
+                else if (tlo.Origin.IsHoldNote) {
+                    if (tlo.Repeat == 0) {
                         tlo.Origin.SampleSet = tlo.FenoSampleSet;
                         tlo.Origin.AdditionSet = tlo.FenoAdditionSet;
                         tlo.Origin.CustomIndex = tlo.FenoCustomIndex;
@@ -306,12 +281,11 @@ namespace Map_Cleaner
                 UpdateProgressbar(worker, (double)i / timeline.TimeLineObjects.Count, 9, maxStages);
             }
 
-            
+
             // Add the new timingpoints
             changes = changes.OrderBy(o => o.TP.Offset).ToList();
             List<TimingPoint> newTimingPoints = new List<TimingPoint>();
-            for (int i = 0; i < changes.Count; i++)
-            {
+            for (int i = 0; i < changes.Count; i++) {
                 Change c = changes[i];
                 c.AddChange(newTimingPoints);
                 UpdateProgressbar(worker, (double)i / changes.Count, 10, maxStages);
@@ -319,48 +293,40 @@ namespace Map_Cleaner
 
             // Replace the old timingpoints
             timing.TimingPoints = newTimingPoints;
-            
+
             // Save the file
             editor.SaveFile();
 
             // Complete progressbar
-            if (worker != null && worker.WorkerReportsProgress)
-            {
+            if (worker != null && worker.WorkerReportsProgress) {
                 worker.ReportProgress(100);
             }
 
             // Make an accurate message (Softwareporn)
             int removed = num_timingPoints - newTimingPoints.Count;
             string message = "";
-            if (removed < 0)
-            {
+            if (removed < 0) {
                 message += "Succesfully added " + Math.Abs(removed);
             }
-            else
-            {
+            else {
                 message += "Succesfully removed " + removed;
             }
-            if (Math.Abs(removed) == 1)
-            {
+            if (Math.Abs(removed) == 1) {
                 message += " greenline and resnapped " + objectsResnapped;
             }
-            else
-            {
+            else {
                 message += " greenlines and resnapped " + objectsResnapped;
             }
-            if (Math.Abs(objectsResnapped) == 1)
-            {
+            if (Math.Abs(objectsResnapped) == 1) {
                 message += " object!";
             }
-            else
-            {
+            else {
                 message += " objects!";
             }
             return message;
         }
 
-        class Change
-        {
+        class Change {
             public TimingPoint TP { get; set; }
             public bool MpB = false;
             public bool Meter = false;
@@ -369,8 +335,7 @@ namespace Map_Cleaner
             public bool Volume = false;
             public bool Inherited = false;
             public bool Kiai = false;
-            public Change(TimingPoint tpNew, bool mpb = false, bool meter = false, bool sampleset = false, bool index = false, bool volume = false, bool inherited = false, bool kiai = false)
-            {
+            public Change(TimingPoint tpNew, bool mpb = false, bool meter = false, bool sampleset = false, bool index = false, bool volume = false, bool inherited = false, bool kiai = false) {
                 TP = tpNew;
                 MpB = mpb;
                 Meter = meter;
@@ -381,42 +346,32 @@ namespace Map_Cleaner
                 Kiai = kiai;
             }
 
-            public void AddChange(List<TimingPoint> list)
-            {
+            public void AddChange(List<TimingPoint> list) {
                 TimingPoint prev = null;
                 TimingPoint on = null;
-                foreach (TimingPoint tp in list)
-                {
-                    if (tp == null)
-                    {
+                foreach (TimingPoint tp in list) {
+                    if (tp == null) {
                         continue;
                     }
-                    if (prev == null)
-                    {
-                        if (tp.Offset < TP.Offset)
-                        {
+                    if (prev == null) {
+                        if (tp.Offset < TP.Offset) {
                             prev = tp;
                         }
                     }
-                    else if (tp.Offset >= prev.Offset && tp.Offset < TP.Offset)
-                    {
+                    else if (tp.Offset >= prev.Offset && tp.Offset < TP.Offset) {
                         prev = tp;
                     }
-                    if (tp.Offset == TP.Offset)
-                    {
-                        if (tp.Inherited && MpB)
-                        {
+                    if (tp.Offset == TP.Offset) {
+                        if (tp.Inherited && MpB) {
                             prev = tp;
                         }
-                        else
-                        {
+                        else {
                             on = tp;
                         }
                     }
                 }
-                
-                if (on != null)
-                {
+
+                if (on != null) {
                     if (MpB) { on.MpB = TP.MpB; }
                     if (Meter) { on.Meter = TP.Meter; }
                     if (Sampleset) { on.SampleSet = TP.SampleSet; }
@@ -425,20 +380,16 @@ namespace Map_Cleaner
                     if (Inherited) { on.Inherited = TP.Inherited; }
                     if (Kiai) { on.Kiai = TP.Kiai; }
                 }
-                else
-                {
-                    if (prev != null)
-                    {
+                else {
+                    if (prev != null) {
                         // Make new timingpoint
-                        if (prev.Inherited)
-                        {
+                        if (prev.Inherited) {
                             on = new TimingPoint(TP.Offset, -100, prev.Meter, prev.SampleSet, prev.SampleIndex, prev.Volume, false, prev.Kiai);
                         }
-                        else
-                        {
+                        else {
                             on = new TimingPoint(TP.Offset, prev.MpB, prev.Meter, prev.SampleSet, prev.SampleIndex, prev.Volume, false, prev.Kiai);
                         }
-                        if(MpB) { on.MpB = TP.MpB; }
+                        if (MpB) { on.MpB = TP.MpB; }
                         if (Meter) { on.Meter = TP.Meter; }
                         if (Sampleset) { on.SampleSet = TP.SampleSet; }
                         if (Index) { on.SampleIndex = TP.SampleIndex; }
@@ -446,23 +397,19 @@ namespace Map_Cleaner
                         if (Inherited) { on.Inherited = TP.Inherited; }
                         if (Kiai) { on.Kiai = TP.Kiai; }
 
-                        if (!on.Equals(prev) || Inherited)
-                        {
+                        if (!on.Equals(prev) || Inherited) {
                             list.Add(on);
                         }
                     }
-                    else
-                    {
+                    else {
                         list.Add(TP);
                     }
                 }
 
                 if (Kiai) // Change every timingpoint after to the kiai toggle
                 {
-                    foreach (TimingPoint tp in list)
-                    {
-                        if (tp.Offset > TP.Offset)
-                        {
+                    foreach (TimingPoint tp in list) {
+                        if (tp.Offset > TP.Offset) {
                             tp.Kiai = TP.Kiai;
                         }
                     }
@@ -470,18 +417,15 @@ namespace Map_Cleaner
             }
         }
 
-        private void UpdateProgressbar(BackgroundWorker worker, double fraction, int stage, int maxStages)
-        {
+        private void UpdateProgressbar(BackgroundWorker worker, double fraction, int stage, int maxStages) {
             // Update progressbar
-            if (worker != null && worker.WorkerReportsProgress)
-            {
+            if (worker != null && worker.WorkerReportsProgress) {
                 worker.ReportProgress((int)((fraction + stage) / maxStages * 100));
             }
         }
 
 
-        private string Run_Program(List<string> arguments, BackgroundWorker worker, DoWorkEventArgs e)
-        {
+        private string Run_Program(List<string> arguments, BackgroundWorker worker, DoWorkEventArgs e) {
             // Retrieve all arguments
             string path = arguments[0];
             bool volumeSliders = arguments[1] == "True";
@@ -512,8 +456,7 @@ namespace Map_Cleaner
             double lastVolume = 100;
             bool lastKiai = false;
 
-            foreach (TimingPoint tp in editor.Beatmap.BeatmapTiming.TimingPoints)
-            {
+            foreach (TimingPoint tp in editor.Beatmap.BeatmapTiming.TimingPoints) {
                 Print("evaluating timingpoint: " + tp.GetLine());
 
                 bool redUseful = false;
@@ -525,14 +468,14 @@ namespace Map_Cleaner
 
                 double firstUsefulTime = 1E99;
 
-                if(tp.Inherited) // If it's a red line it's usefull
+                if (tp.Inherited) // If it's a red line it's usefull
                 {
                     redUseful = true;
                     firstUsefulTime = tp.Offset;
                     Print("usefull by redline");
                 }
 
-                if(tp.Kiai != lastKiai) // Kiai toggle is instant usefull and no move
+                if (tp.Kiai != lastKiai) // Kiai toggle is instant usefull and no move
                 {
                     kiaiUseful = true;
                     firstUsefulTime = tp.Offset;
@@ -554,24 +497,19 @@ namespace Map_Cleaner
                 bool sampleindexChange = tp.SampleIndex != lastSampleIndex;
 
 
-                if (svChange && ! tp.Inherited)
-                {
+                if (svChange && !tp.Inherited) {
                     // SV change is always impactfull in taiko and mania
-                    if (mode == 3 || mode == 1)
-                    {
+                    if (mode == 3 || mode == 1) {
                         svUseful = true;
                         firstUsefulTime = tp.Offset;
                         Print("usefull by gamemode SV");
                     }
 
                     // Check for sliderhead
-                    foreach(TimelineObject tlo in timeLineObjectsInRange.TimeLineObjects)
-                    {
-                        if (tlo.IsSliderHead)
-                        {
+                    foreach (TimelineObject tlo in timeLineObjectsInRange.TimeLineObjects) {
+                        if (tlo.IsSliderHead) {
                             svUseful = true;
-                            if (tlo.Time < firstUsefulTime)
-                            {
+                            if (tlo.Time < firstUsefulTime) {
                                 firstUsefulTime = tlo.Time;
                             }
                             Print("usefull by SV sliderhead");
@@ -579,50 +517,39 @@ namespace Map_Cleaner
                     }
                 }
 
-                if(volumeChange)
-                {
-                    foreach (TimelineObject tlo in timeLineObjectsInRange.TimeLineObjects)
-                    {
-                        if (tlo.HasHitsound)
-                        {
-                            if (removeSliderendMuting && tlo.IsSliderEnd && tp.Volume == 5)
-                            {
+                if (volumeChange) {
+                    foreach (TimelineObject tlo in timeLineObjectsInRange.TimeLineObjects) {
+                        if (tlo.HasHitsound) {
+                            if (removeSliderendMuting && tlo.IsSliderEnd && tp.Volume == 5) {
                                 continue;
                             }
 
                             volumeUseful = true;
-                            if (tlo.Time < firstUsefulTime)
-                            {
+                            if (tlo.Time < firstUsefulTime) {
                                 firstUsefulTime = tlo.Time;
                             }
                             Print("usefull by volume hitsound");
                         }
                     }
 
-                    foreach(HitObject ho in bodiesInRange) // Check for purpose in slider/spinner bodies
+                    foreach (HitObject ho in bodiesInRange) // Check for purpose in slider/spinner bodies
                     {
-                        if ((ho.IsSlider) && volumeSliders)
-                        {
+                        if ((ho.IsSlider) && volumeSliders) {
                             volumeUseful = true;
-                            if (ho.Time > tp.Offset && ho.Time < firstUsefulTime)
-                            {
+                            if (ho.Time > tp.Offset && ho.Time < firstUsefulTime) {
                                 firstUsefulTime = ho.Time;
                             }
-                            else
-                            {
+                            else {
                                 firstUsefulTime = tp.Offset;
                             }
                             Print("usefull by volume sliderslide");
                         }
-                        else if (ho.IsSpinner && volumeSpinners)
-                        {
+                        else if (ho.IsSpinner && volumeSpinners) {
                             volumeUseful = true;
-                            if (ho.Time > tp.Offset && ho.Time < firstUsefulTime)
-                            {
+                            if (ho.Time > tp.Offset && ho.Time < firstUsefulTime) {
                                 firstUsefulTime = ho.Time;
                             }
-                            else
-                            {
+                            else {
                                 firstUsefulTime = tp.Offset;
                             }
                             Print("usefull by volume spinnerspin");
@@ -630,15 +557,12 @@ namespace Map_Cleaner
                     }
                 }
 
-                if(samplesetChange)
-                {
-                    foreach (TimelineObject tlo in timeLineObjectsInRange.TimeLineObjects)
-                    {
+                if (samplesetChange) {
+                    foreach (TimelineObject tlo in timeLineObjectsInRange.TimeLineObjects) {
                         if (tlo.HasHitsound && tlo.SampleSet == 0) // 0 is Auto so it will be affected by greenlines
                         {
                             samplesetUseful = true;
-                            if (tlo.Time < firstUsefulTime)
-                            {
+                            if (tlo.Time < firstUsefulTime) {
                                 firstUsefulTime = tlo.Time;
                             }
                             Print("usefull by sampleset hitsound");
@@ -647,28 +571,22 @@ namespace Map_Cleaner
 
                     foreach (HitObject ho in bodiesInRange) // Check for purpose in slider/spinner bodies
                     {
-                        if ((ho.IsSlider) && samplesetSliders)
-                        {
+                        if ((ho.IsSlider) && samplesetSliders) {
                             samplesetUseful = true;
-                            if (ho.Time > tp.Offset && ho.Time < firstUsefulTime)
-                            {
+                            if (ho.Time > tp.Offset && ho.Time < firstUsefulTime) {
                                 firstUsefulTime = ho.Time;
                             }
-                            else
-                            {
+                            else {
                                 firstUsefulTime = tp.Offset;
                             }
                             Print("usefull by sampleset sliderslide");
                         }
-                        else if (ho.IsSpinner && samplesetSpinners)
-                        {
+                        else if (ho.IsSpinner && samplesetSpinners) {
                             samplesetUseful = true;
-                            if (ho.Time > tp.Offset && ho.Time < firstUsefulTime)
-                            {
+                            if (ho.Time > tp.Offset && ho.Time < firstUsefulTime) {
                                 firstUsefulTime = ho.Time;
                             }
-                            else
-                            {
+                            else {
                                 firstUsefulTime = tp.Offset;
                             }
                             Print("usefull by sampleset spinnerspin");
@@ -676,16 +594,13 @@ namespace Map_Cleaner
                     }
                 }
 
-                if (sampleindexChange)
-                {
+                if (sampleindexChange) {
 
-                    foreach (TimelineObject tlo in timeLineObjectsInRange.TimeLineObjects)
-                    {
+                    foreach (TimelineObject tlo in timeLineObjectsInRange.TimeLineObjects) {
                         if (tlo.HasHitsound) // 0 is Auto so it will be affected by greenlines
                         {
                             sampleindexUseful = true;
-                            if (tlo.Time < firstUsefulTime)
-                            {
+                            if (tlo.Time < firstUsefulTime) {
                                 firstUsefulTime = tlo.Time;
                             }
                             Print("usefull by sampleindex hitsound");
@@ -694,28 +609,22 @@ namespace Map_Cleaner
 
                     foreach (HitObject ho in bodiesInRange) // Check for purpose in slider/spinner bodies
                     {
-                        if ((ho.IsSlider) && samplesetSliders)
-                        {
+                        if ((ho.IsSlider) && samplesetSliders) {
                             sampleindexUseful = true;
-                            if (ho.Time > tp.Offset && ho.Time < firstUsefulTime)
-                            {
+                            if (ho.Time > tp.Offset && ho.Time < firstUsefulTime) {
                                 firstUsefulTime = ho.Time;
                             }
-                            else
-                            {
+                            else {
                                 firstUsefulTime = tp.Offset;
                             }
                             Print("usefull by sampleindex sliderslide");
                         }
-                        else if (ho.IsSpinner && samplesetSpinners)
-                        {
+                        else if (ho.IsSpinner && samplesetSpinners) {
                             sampleindexUseful = true;
-                            if (ho.Time > tp.Offset && ho.Time < firstUsefulTime)
-                            {
+                            if (ho.Time > tp.Offset && ho.Time < firstUsefulTime) {
                                 firstUsefulTime = ho.Time;
                             }
-                            else
-                            {
+                            else {
                                 firstUsefulTime = tp.Offset;
                             }
                             Print("usefull by sampleindex spinnerspin");
@@ -726,29 +635,29 @@ namespace Map_Cleaner
                 // Only let them have the thing that made them usefull
                 if (redUseful) { lastMpB = -100; } // Redlines have 1.00x SV
                 else { if (svUseful) { lastMpB = tp.MpB; } else { tp.MpB = lastMpB; } } // Don't change the MpB of the redline
-                if (kiaiUseful) { lastKiai = tp.Kiai; } else { tp.Kiai = lastKiai; }
-                if (volumeUseful) { lastVolume = tp.Volume; } else { tp.Volume = lastVolume; }
-                if (samplesetUseful) { lastSampleSet = tp.SampleSet; } else { tp.SampleSet = lastSampleSet; }
-                if (sampleindexUseful) { lastSampleIndex = tp.SampleIndex; } else { tp.SampleIndex = lastSampleIndex; }
+                if (kiaiUseful) { lastKiai = tp.Kiai; }
+                else { tp.Kiai = lastKiai; }
+                if (volumeUseful) { lastVolume = tp.Volume; }
+                else { tp.Volume = lastVolume; }
+                if (samplesetUseful) { lastSampleSet = tp.SampleSet; }
+                else { tp.SampleSet = lastSampleSet; }
+                if (sampleindexUseful) { lastSampleIndex = tp.SampleIndex; }
+                else { tp.SampleIndex = lastSampleIndex; }
 
                 bool usefull = redUseful || kiaiUseful || svUseful || samplesetUseful || sampleindexUseful || volumeUseful;
                 // Move to earliest usefull thing
-                if (usefull)
-                {
+                if (usefull) {
                     tp.Offset = firstUsefulTime;
                     newTimingPoints.Add(tp);
                 }
-                else
-                {
+                else {
                     greenlinesRemoved += 1;
                 }
                 timingpointsProcessed += 1;
 
                 // Update progressbar
-                if (worker != null)
-                {
-                    if (worker.WorkerReportsProgress)
-                    {
+                if (worker != null) {
+                    if (worker.WorkerReportsProgress) {
                         int percentComplete = (int)((timingpointsProcessed / num_timingPoints) * 100);
                         worker.ReportProgress(percentComplete);
                     }
@@ -758,36 +667,30 @@ namespace Map_Cleaner
             // Replace the timingpoints
             timing.TimingPoints = newTimingPoints;
 
-            if (resnapObjects)
-            {
+            if (resnapObjects) {
                 // Snap all objects and timingpoints
-                foreach (TimingPoint tp in timing.TimingPoints)
-                {
+                foreach (TimingPoint tp in timing.TimingPoints) {
                     tp.Offset = Math.Floor(timing.Resnap(tp.Offset, snap1, snap2));
                 }
-                foreach (HitObject ho in editor.Beatmap.HitObjects)
-                {
+                foreach (HitObject ho in editor.Beatmap.HitObjects) {
                     ho.Time = Math.Floor(timing.Resnap(ho.Time, snap1, snap2));
                 }
             }
-            if (resnapBookmarks)
-            {
+            if (resnapBookmarks) {
                 // Snap the bookmarks
                 List<double> newBookmarks = new List<double>();
-                foreach (double bookmark in editor.Beatmap.GetBookmarks())
-                {
+                foreach (double bookmark in editor.Beatmap.GetBookmarks()) {
                     newBookmarks.Add(timing.Resnap(bookmark, snap1, snap2));
                 }
                 editor.Beatmap.SetBookmarks(newBookmarks);
             }
 
             editor.SaveFile();
-            
+
             return "Succesfully removed " + greenlinesRemoved + " greenlines!";
         }
-        
-        public void Print(string str)
-        {
+
+        public void Print(string str) {
             Debug.WriteLine(str);
         }
     }
