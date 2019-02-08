@@ -80,9 +80,16 @@ namespace Map_Cleaner {
 
 
         private void Start_Click(object sender, RoutedEventArgs e) {
-            backgroundWorker.RunWorkerAsync(new List<string> { selectBox.Text, VolumeSliders.IsChecked.ToString(), SamplesetSliders.IsChecked.ToString(),
-                                                    VolumeSpinners.IsChecked.ToString(), RemoveSliderendMuting.IsChecked.ToString(),
-                                                    ResnapObjects.IsChecked.ToString(), ResnapBookmarks.IsChecked.ToString(), Snap1.Text, Snap2.Text});
+            backgroundWorker.RunWorkerAsync(new List<string> {  selectBox.Text,
+                                                                VolumeSliders.IsChecked.ToString(),
+                                                                SamplesetSliders.IsChecked.ToString(),
+                                                                VolumeSpinners.IsChecked.ToString(),
+                                                                ResnapObjects.IsChecked.ToString(),
+                                                                ResnapBookmarks.IsChecked.ToString(),
+                                                                Snap1.Text,
+                                                                Snap2.Text,
+                                                                RemoveSliderendMuting.IsChecked.ToString(),
+                                                                RemoveUnclickableHitsounds.IsChecked.ToString() });
             start.IsEnabled = false;
         }
 
@@ -93,11 +100,12 @@ namespace Map_Cleaner {
             bool volumeSliders = arguments[1] == "True";
             bool samplesetSliders = arguments[2] == "True";
             bool volumeSpinners = arguments[3] == "True";
-            bool removeSliderendMuting = arguments[4] == "True";
-            bool resnapObjects = arguments[5] == "True";
-            bool resnapBookmarks = arguments[6] == "True";
-            int snap1 = int.Parse(arguments[7].Split('/')[1]);
-            int snap2 = int.Parse(arguments[8].Split('/')[1]);
+            bool resnapObjects = arguments[4] == "True";
+            bool resnapBookmarks = arguments[5] == "True";
+            int snap1 = int.Parse(arguments[6].Split('/')[1]);
+            int snap2 = int.Parse(arguments[7].Split('/')[1]);
+            bool removeSliderendMuting = arguments[8] == "True";
+            bool removeUnclickabeHitsounds = arguments[9] == "True";
 
             Editor editor = new Editor(path);
             Timing timing = editor.Beatmap.BeatmapTiming;
@@ -169,6 +177,18 @@ namespace Map_Cleaner {
                     UpdateProgressbar(worker, (double)i / bookmarks.Count, 4, maxStages);
                 }
                 editor.Beatmap.SetBookmarks(newBookmarks);
+            }
+
+            // Maybe mute unclickable timelineobjects
+            if (removeUnclickabeHitsounds)
+            {
+                foreach(TimelineObject tlo in timeline.TimeLineObjects)
+                {
+                    if (!(tlo.IsCircle || tlo.IsSliderHead || tlo.IsHoldnoteHead))  // Not clickable
+                    {
+                        tlo.FenoSampleVolume = 5;  // 5% volume mute
+                    }
+                }
             }
 
             // Make new timingpoints

@@ -8,7 +8,7 @@
         xmlns:materialDesign="http://materialdesignxaml.net/winfx/xaml/themes"
         xmlns:materialDesign1="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
-        Title="Beatmap Cleaner 2.0.0" 
+        Title="Beatmap Cleaner 2.2.1" 
         Height="380" 
         Width="554" 
         WindowStyle="None"
@@ -28,7 +28,7 @@
     </WindowChrome.WindowChrome>
     <Grid>
         <Image Source="data/map_cleaner.png" Margin="4,4,514,342"></Image>
-        <TextBlock Text="Map Cleaner v 2.0.0" Foreground="#FF5F5E5E" Margin="46,14,378,349"></TextBlock>
+        <TextBlock Text="Map Cleaner 2.2.1" Foreground="#FF5F5E5E" Margin="46,14,378,349"></TextBlock>
         <Button Padding="0" Cursor="Hand" Click="MinimizeWin" Margin="480,6,42,342" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="White" Panel.ZIndex="2">
             <Button.Style>
                 <Style TargetType="{x:Type Button}">
@@ -158,22 +158,23 @@
         <CheckBox x:Name="VolumeSliders" Cursor="Hand" Content="Map uses volume changes in sliders" HorizontalAlignment="Left" Margin="18,84,0,0" VerticalAlignment="Top" FontWeight="Bold" Height="22" Width="277" IsChecked="True" Foreground="#FFD6D6D6"/>
         <CheckBox x:Name="SamplesetSliders" Cursor="Hand" Content="Map uses sampleset changes in sliders" HorizontalAlignment="Left" Margin="18,106,0,0" VerticalAlignment="Top" FontWeight="Bold" IsChecked="True" Width="277" Foreground="#FFD6D6D6" Height="16"/>
         <CheckBox x:Name="VolumeSpinners" Cursor="Hand" Content="Map uses volume changes in spinners" HorizontalAlignment="Left" Margin="18,124,0,0" VerticalAlignment="Top" FontWeight="Bold" IsChecked="True" Width="277" Foreground="#FFD6D6D6" Height="18"/>
-        <CheckBox x:Name="RemoveSliderendMuting" Cursor="Hand" Content="Remove sliderend muting" HorizontalAlignment="Left" Margin="18,200,0,0" VerticalAlignment="Top" FontWeight="Bold" Width="193" Foreground="#FFD6D6D6"/>
-        <CheckBox x:Name="ResnapObjects" Cursor="Hand" Content="Resnap Objects" HorizontalAlignment="Left" Margin="18,248,0,0" VerticalAlignment="Top" FontWeight="Bold" Width="129" Foreground="#FFD6D6D6"/>
-        <ComboBox x:Name="Snap1" Padding="0" Cursor="Hand" HorizontalAlignment="Left" Margin="221,239,0,0" VerticalAlignment="Top" Width="97" SelectedIndex="4" Height="28" Foreground="#FFD6D6D6">
+        <CheckBox x:Name="RemoveSliderendMuting" Cursor="Hand" Content="Remove sliderend muting" HorizontalAlignment="Left" Margin="18,243,0,0" VerticalAlignment="Top" FontWeight="Bold" Width="193" Foreground="#FFD6D6D6"/>
+        <CheckBox x:Name="ResnapObjects" Cursor="Hand" Content="Resnap objects" HorizontalAlignment="Left" Margin="18,205,0,0" VerticalAlignment="Top" FontWeight="Bold" Width="129" Foreground="#FFD6D6D6"/>
+        <ComboBox x:Name="Snap1" Padding="0" Cursor="Hand" HorizontalAlignment="Left" Margin="222,211,0,0" VerticalAlignment="Top" Width="97" SelectedIndex="4" Height="28" Foreground="#FFD6D6D6">
             <ComboBoxItem Content="1/1" Cursor="Hand" HorizontalAlignment="Left" Width="118"/>
             <ComboBoxItem Content="1/2" Cursor="Hand" HorizontalAlignment="Left" Width="118"/>
             <ComboBoxItem Content="1/4" Cursor="Hand" HorizontalAlignment="Left" Width="118"/>
             <ComboBoxItem Content="1/8" Cursor="Hand" HorizontalAlignment="Left" Width="118"/>
             <ComboBoxItem Content="1/16" Cursor="Hand" HorizontalAlignment="Left" Width="118"/>
         </ComboBox>
-        <CheckBox x:Name="ResnapBookmarks" Cursor="Hand" Content="Resnap Bookmarks" HorizontalAlignment="Left" Margin="18,224,0,0" VerticalAlignment="Top" FontWeight="Bold" Width="151" Foreground="#FFD6D6D6"/>
-        <ComboBox x:Name="Snap2" Padding="0" Cursor="Hand" HorizontalAlignment="Left" Margin="357,239,0,0" VerticalAlignment="Top" Width="97" SelectedIndex="3" Foreground="#FFD6D6D6" Height="28">
+        <CheckBox x:Name="ResnapBookmarks" Cursor="Hand" Content="Resnap bookmarks" HorizontalAlignment="Left" Margin="18,224,0,0" VerticalAlignment="Top" FontWeight="Bold" Width="151" Foreground="#FFD6D6D6"/>
+        <ComboBox x:Name="Snap2" Padding="0" Cursor="Hand" HorizontalAlignment="Left" Margin="356,211,0,0" VerticalAlignment="Top" Width="97" SelectedIndex="3" Foreground="#FFD6D6D6" Height="28">
             <ComboBoxItem Content="1/1" Cursor="Hand" HorizontalAlignment="Left" Width="118"/>
             <ComboBoxItem Content="1/3" Cursor="Hand" HorizontalAlignment="Left" Width="118"/>
             <ComboBoxItem Content="1/6" Cursor="Hand" HorizontalAlignment="Left" Width="118"/>
             <ComboBoxItem Content="1/12" Cursor="Hand" HorizontalAlignment="Left" Width="118"/>
         </ComboBox>
+        <CheckBox x:Name="RemoveUnclickableHitsounds" Cursor="Hand" Content="Mute unclickable hitsounds" HorizontalAlignment="Left" Margin="18,262,0,0" VerticalAlignment="Top" FontWeight="Bold" Width="204" Foreground="#FFD6D6D6"/>
     </Grid>
     <Window.Resources>
         <cm:BackgroundWorker x:Key="backgroundWorker"
