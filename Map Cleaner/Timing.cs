@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -57,7 +59,7 @@ namespace Map_Cleaner
             {
                 newTime = afterTP.Offset;
             }
-            return newTime;
+            return newTime + 1E-7;  // Add a tiny bit so it doesn't floor near exact values;
         }
 
         public double ResnapInRange(double time, int divisor2, int divisor3, HitObject ho)
@@ -90,7 +92,7 @@ namespace Map_Cleaner
             {
                 newTime = time;
             }
-            return newTime;
+            return newTime + 1E-7;  // Add a tiny bit so it doesn't floor near exact values;
         }
 
         public double GetTimingPointEffectiveRange(TimingPoint ttp)
@@ -259,6 +261,7 @@ namespace Map_Cleaner
                     {
                         break;
                     }
+                    BitArray b = new BitArray(new int[] { int.Parse(values[7]) });
                     timingPoints.Add(new TimingPoint(
                         ParseDouble(values[0]), 
                         ParseDouble(values[1]), 
@@ -267,7 +270,8 @@ namespace Map_Cleaner
                         int.Parse(values[4]), 
                         ParseDouble(values[5]), 
                         values[6] == "1", 
-                        values[7] == "1"));
+                        b[0],
+                        b[3]));
                 }
                 else
                 {
@@ -296,11 +300,11 @@ namespace Map_Cleaner
             if (firstTP.Inherited)
             {
                 return new TimingPoint(firstTP.Offset - firstTP.MpB * firstTP.Meter * 10, firstTP.MpB,
-                                        firstTP.Meter, firstTP.SampleSet, firstTP.SampleIndex, firstTP.Volume, firstTP.Inherited, false);
+                                        firstTP.Meter, firstTP.SampleSet, firstTP.SampleIndex, firstTP.Volume, firstTP.Inherited, false, false);
             }
             else
             {
-                return new TimingPoint(0, 1000, firstTP.Meter, firstTP.SampleSet, firstTP.SampleIndex, firstTP.Volume, firstTP.Inherited, false);
+                return new TimingPoint(0, 1000, firstTP.Meter, firstTP.SampleSet, firstTP.SampleIndex, firstTP.Volume, firstTP.Inherited, false, false);
             }
             
         }

@@ -307,7 +307,7 @@ namespace Map_Cleaner {
             List<TimingPoint> newTimingPoints = new List<TimingPoint>();
             for (int i = 0; i < changes.Count; i++) {
                 Change c = changes[i];
-                c.AddChange(newTimingPoints);
+                c.AddChange(newTimingPoints, timing);
                 UpdateProgressbar(worker, (double)i / changes.Count, 10, maxStages);
             }
 
@@ -366,7 +366,7 @@ namespace Map_Cleaner {
                 Kiai = kiai;
             }
 
-            public void AddChange(List<TimingPoint> list) {
+            public void AddChange(List<TimingPoint> list, Timing timing) {
                 TimingPoint prev = null;
                 TimingPoint on = null;
                 foreach (TimingPoint tp in list) {
@@ -382,7 +382,7 @@ namespace Map_Cleaner {
                         prev = tp;
                     }
                     if (tp.Offset == TP.Offset) {
-                        if (tp.Inherited && MpB) {
+                        if (tp.Inherited && MpB && !(Inherited)) {
                             prev = tp;
                         }
                         else {
@@ -397,24 +397,24 @@ namespace Map_Cleaner {
                     if (Sampleset) { on.SampleSet = TP.SampleSet; }
                     if (Index) { on.SampleIndex = TP.SampleIndex; }
                     if (Volume) { on.Volume = TP.Volume; }
-                    if (Inherited) { on.Inherited = TP.Inherited; }
+                    if (Inherited) { on.Inherited = TP.Inherited; on.OmitFirstBarLine = TP.OmitFirstBarLine; }
                     if (Kiai) { on.Kiai = TP.Kiai; }
                 }
                 else {
                     if (prev != null) {
                         // Make new timingpoint
                         if (prev.Inherited) {
-                            on = new TimingPoint(TP.Offset, -100, prev.Meter, prev.SampleSet, prev.SampleIndex, prev.Volume, false, prev.Kiai);
+                            on = new TimingPoint(TP.Offset, -100, prev.Meter, prev.SampleSet, prev.SampleIndex, prev.Volume, false, prev.Kiai, false);
                         }
                         else {
-                            on = new TimingPoint(TP.Offset, prev.MpB, prev.Meter, prev.SampleSet, prev.SampleIndex, prev.Volume, false, prev.Kiai);
+                            on = new TimingPoint(TP.Offset, prev.MpB, prev.Meter, prev.SampleSet, prev.SampleIndex, prev.Volume, false, prev.Kiai, false);
                         }
                         if (MpB) { on.MpB = TP.MpB; }
                         if (Meter) { on.Meter = TP.Meter; }
                         if (Sampleset) { on.SampleSet = TP.SampleSet; }
                         if (Index) { on.SampleIndex = TP.SampleIndex; }
                         if (Volume) { on.Volume = TP.Volume; }
-                        if (Inherited) { on.Inherited = TP.Inherited; }
+                        if (Inherited) { on.Inherited = TP.Inherited; on.OmitFirstBarLine = TP.OmitFirstBarLine; }
                         if (Kiai) { on.Kiai = TP.Kiai; }
 
                         if (!on.Equals(prev) || Inherited) {
@@ -422,7 +422,18 @@ namespace Map_Cleaner {
                         }
                     }
                     else {
-                        list.Add(TP);
+                        if (TP.MpB == -100)
+                        {
+                            TP.MpB = timing.GetMpBAtTime(0);
+                            list.Add(TP);
+                        }
+                        else
+                        {
+                            TimingPoint rTP = TP.Copy();
+                            rTP.MpB = timing.GetMpBAtTime(0);
+                            list.Add(TP);
+                            AddChange(list, timing);
+                        }
                     }
                 }
 

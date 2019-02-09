@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -100,20 +101,21 @@ namespace Map_Cleaner
 
         public bool ResnapEnd(Timing timing, int snap1, int snap2)
         {
-            double newTime = timing.Resnap(EndTime, snap1, snap2);
-            double deltaTime = newTime - EndTime; 
+            double newTime = Math.Floor(timing.Resnap(EndTime, snap1, snap2));
+            double deltaEndTime = newTime - EndTime;
+            double deltaTemporalTime = deltaEndTime / Repeat; 
             if (IsSlider)
             {
-                double deltaLength = (-10000 * timing.SliderMultiplier * deltaTime / Repeat) / (Redline.MpB * SV);  // Divide by repeats because the endtime is multiplied by repeats
+                double deltaLength = (-10000 * timing.SliderMultiplier * deltaTemporalTime) / (Redline.MpB * SV);  // Divide by repeats because the endtime is multiplied by repeats
                 PixelLength += deltaLength; // Change the pixellength to match the new time
             }
 
             // Change
-            TemporalLength += deltaTime;
-            TimelineObjects.Last().Time = Math.Floor(Time + TemporalLength);
-            EndTime = Math.Floor(Time + TemporalLength);
+            TemporalLength += deltaTemporalTime;
+            TimelineObjects.Last().Time = newTime;
+            EndTime = newTime;
             BodyHitsounds.RemoveAll(s => s.Offset >= EndTime);
-            return deltaTime != 0;
+            return deltaEndTime != 0;
         }
 
         public void SetLine(string line)

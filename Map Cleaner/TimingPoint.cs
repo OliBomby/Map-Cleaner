@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -18,7 +19,8 @@ namespace Map_Cleaner
         public double Volume { get; set; }
         public bool Inherited { get; set; } // True is red line
         public bool Kiai { get; set; }
-        public TimingPoint(double Offset, double MpB, int Meter, int SampleSet, int SampleIndex, double Volume, bool Inherited, bool Kiai)
+        public bool OmitFirstBarLine { get; set; }
+        public TimingPoint(double Offset, double MpB, int Meter, int SampleSet, int SampleIndex, double Volume, bool Inherited, bool Kiai, bool OmitFirstBarLine)
         {
             this.Offset = Offset;
             this.MpB = MpB;
@@ -28,17 +30,19 @@ namespace Map_Cleaner
             this.Volume = Volume;
             this.Inherited = Inherited;
             this.Kiai = Kiai;
+            this.OmitFirstBarLine = OmitFirstBarLine;
         }
 
         public string GetLine()
         {
+            int style = GetIntFromBitArray(new BitArray(new bool[] { Kiai, false, false, OmitFirstBarLine }));
             return Math.Round(Offset) + "," + MpB.ToString(CultureInfo.InvariantCulture) + "," + Meter + "," + SampleSet + "," + SampleIndex + "," 
-                + Math.Round(Volume) + "," + Convert.ToInt32(Inherited) + "," + Convert.ToInt32(Kiai);
+                + Math.Round(Volume) + "," + Convert.ToInt32(Inherited) + "," + style;
         }
 
         public TimingPoint Copy()
         {
-            return new TimingPoint(Offset, MpB, Meter, SampleSet, SampleIndex, Volume, Inherited, Kiai);
+            return new TimingPoint(Offset, MpB, Meter, SampleSet, SampleIndex, Volume, Inherited, Kiai, OmitFirstBarLine);
         }
 
         public bool ResnapSelf(Timing timing, int snap1, int snap2)
@@ -68,6 +72,16 @@ namespace Map_Cleaner
             {
                 return -100 / MpB;
             }
+        }
+
+        private int GetIntFromBitArray(BitArray bitArray)
+        {
+            if (bitArray.Length > 32)
+                throw new ArgumentException("Argument length shall be at most 32 bits.");
+
+            int[] array = new int[1];
+            bitArray.CopyTo(array, 0);
+            return array[0];
         }
     }
 }

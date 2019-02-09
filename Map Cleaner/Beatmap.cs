@@ -83,7 +83,12 @@ namespace Map_Cleaner
                 ho.TP = BeatmapTiming.GetTimingPointAtTime(ho.Time);
                 ho.HitsoundTP = BeatmapTiming.GetTimingPointAtTime(ho.Time + 5);
                 ho.Redline = BeatmapTiming.GetRedlineAtTime(ho.Time);
-                ho.BodyHitsounds = BeatmapTiming.GetTimingPointsInTimeRange(ho.Time, ho.EndTime);
+                ho.BodyHitsounds = new List<TimingPoint>();
+                for (int i = 0; i < ho.Repeat; i++)  // Add greenlines range between repeats for every repeat
+                {
+                    ho.BodyHitsounds.AddRange(BeatmapTiming.GetTimingPointsInTimeRange(ho.Time + ho.TemporalLength * i + 5,
+                                                                                       ho.Time + ho.TemporalLength * (i + 1) - 5));  // Ignore greenlines that are too close to the ends
+                }
             }
         }
 
